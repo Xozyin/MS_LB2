@@ -1,5 +1,5 @@
-from formPainter import FormPainter
-from classes import GlobalConfig
+from classes.formPainter import FormPainter
+from classes.globalConfig import GlobalConfig
 
 def main():
     x0 = [0.0, 0.0, 1100.0]

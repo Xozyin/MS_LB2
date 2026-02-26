@@ -1,4 +1,5 @@
-from classes import GlobalConfig, PointInTime
+from classes.globalConfig import GlobalConfig
+from classes.pointInTime import PointInTime
 import math
 import numpy as np
 
