@@ -36,13 +36,11 @@ class FormPainter():
         self.buttonEnd = None
         self.history_label = None
         self.iter_table_axes = None
+        self.analysis_table_axes = None
         self.plot_axes = []
 
-        self.form_input_column()
-    
-    def form_input_column(self):
+        # Формирование элементов
         t0, T = self.globalConfig.T_interval
-
         # КОЛОНКА 1 - ИНПУТ
         # LABEL - Режим
         self.ax_input.text(0.01, 1.1, 'Выберите режим:', 
@@ -133,7 +131,7 @@ class FormPainter():
             transform=self.ax_results.transAxes)
         
         # Заголовок для таблицы
-        self.history_label = self.ax_results.text(0.5, 0.6, 'ИСТОРИЯ ПОДБОРА ШАГА:', 
+        self.history_label = self.ax_results.text(0.5, 0.9, 'ИСТОРИЯ ПОДБОРА ШАГА:', 
             ha='center', fontsize=10, fontweight='bold', 
             transform=self.ax_results.transAxes)
         self.history_label.set_visible(False)
@@ -144,19 +142,7 @@ class FormPainter():
         
         # КНОПКА СТАРТ
         def on_start(event):
-            self.step_value.set_visible(True)
-            self.step_value_label.set_visible(True)
-            self.delta_value.set_visible(True)
-            self.delta_value_label.set_visible(True)
-            self.fin_values_text.set_visible(True)
-            self.fin_values_text_lable.set_visible(True)
-            self.history_label.set_visible(True)
-
-            try:
-                if hasattr(self, 'iter_table_axes'):
-                    self.iter_table_axes.remove()
-            except:
-                pass
+            self.set_elements(vis_flag=True)
 
             try:
                 h_user = float(self.h_input.text)
@@ -185,10 +171,8 @@ class FormPainter():
                 
                 # Выполняем расчет взависимости от выбора пользователя
                 if self.current_mode == "fixed":
-                    self.history_label.set_visible(False)
                     results = runge_kut(self.globalConfig, model4, h_user)
                 else:
-                    self.history_label.set_visible(True)
                     h_user, results = self.auto_solution(h_user=h_user)
                     h_etalon = None
                 
@@ -208,22 +192,8 @@ class FormPainter():
 
         # КНОПКА АНАЛИЗ
         def on_analyze(event):
-            self.step_value.set_visible(False)
-            self.step_value_label.set_visible(False)
-            self.delta_value.set_visible(False)
-            self.delta_value_label.set_visible(False)
-            self.fin_values_text.set_visible(False)
-            self.fin_values_text_lable.set_visible(False)
-            self.history_label.set_visible(False)
-
-            try:
-                if hasattr(self, 'iter_table_axes'):
-                    self.iter_table_axes.remove()
-            except:
-                pass
-            
+            self.set_elements(False)
             self.analyze_dependence([2, 1.5, 1, 0.5, 0.1, 0.05, 0.02, 0.005, 0.002])
-
 
         self.buttonStart.on_clicked(on_start)
         self.buttonEnd.on_clicked(on_end)
@@ -462,23 +432,16 @@ class FormPainter():
         self.fig.canvas.draw()
 
     def create_analysis_table(self, h_values, delta_values, time_values, steps_values, x1_values):
-        # Удаляем предыдущую таблицу анализа если была
         try:
             if hasattr(self, 'analysis_table_axes'):
                 self.analysis_table_axes.remove()
         except:
             pass
         
-        # Создаем оси для таблицы
-        self.analysis_table_axes = self.fig.add_axes([0.72, 0.1, 0.2, 0.35])
+        self.analysis_table_axes = self.fig.add_axes([0.76, 0.3, 0.2, 0.35])
         self.analysis_table_axes.axis('off')
         
-        # Заголовок
-        self.analysis_table_axes.text(0.5, 1.05, 'АНАЛИЗ ЗАВИСИМОСТЕЙ', 
-                                    ha='center', fontsize=10, fontweight='bold',
-                                    transform=self.analysis_table_axes.transAxes)
-        
-        # Подготавливаем данные для таблицы
+        # ТАБЛИЦА АНАЛИЗ
         table_data = []
         for i in range(len(h_values)):
             table_data.append([
@@ -489,11 +452,9 @@ class FormPainter():
                 f"{steps_values[i]}",
                 f"{x1_values[i]:.4f}"
             ])
-        
-        # Создаем таблицу
         table = self.analysis_table_axes.table(
             cellText=table_data,
-            colLabels=['№', 'h', 'δ %', 'Время', 'Шаги', 'x₁(T)'],
+            colLabels=['№', 'h', 'ОП%', 'Время', 'Шаги', 'X1(T)'],
             cellLoc='center',
             loc='center',
             colWidths=[0.08, 0.18, 0.16, 0.16, 0.14, 0.18]
@@ -507,16 +468,16 @@ class FormPainter():
         # Закрашиваем заголовки
         for (i, j), cell in table.get_celld().items():
             if i == 0:
-                cell.set_facecolor('#40466e')
+                cell.set_facecolor('grey')
                 cell.set_text_props(color='white', weight='bold')
             elif j == 2:  # Колонка с погрешностью
                 value = float(cell.get_text().get_text().replace('%', ''))
                 if value <= 1.0:
-                    cell.set_facecolor('#90ee90')  # Зеленый для ≤1%
+                    cell.set_facecolor('green')
                 elif value <= 5.0:
-                    cell.set_facecolor('#ffff99')  # Желтый для ≤5%
+                    cell.set_facecolor('yellow')
                 else:
-                    cell.set_facecolor('#ffcc99')  # Оранжевый для >5%
+                    cell.set_facecolor('orange') 
         
         # Добавляем информацию об эталоне
         t0, T = self.globalConfig.T_interval
@@ -526,3 +487,24 @@ class FormPainter():
                                     bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7))
         
         self.fig.canvas.draw()
+
+    def set_elements(self, vis_flag: bool):
+        self.step_value.set_visible(vis_flag)
+        self.step_value_label.set_visible(vis_flag)
+        self.delta_value.set_visible(vis_flag)
+        self.delta_value_label.set_visible(vis_flag)
+        self.fin_values_text.set_visible(vis_flag)
+        self.fin_values_text_lable.set_visible(vis_flag)
+        self.history_label.set_visible(not vis_flag)
+
+        try:
+            if hasattr(self, 'iter_table_axes'):
+                self.iter_table_axes.remove()
+        except:
+            pass
+
+        try:
+            if hasattr(self, 'analysis_table_axes'):
+                self.analysis_table_axes.remove()
+        except:
+            pass

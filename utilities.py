@@ -59,18 +59,3 @@ def runge_kut(globConf: GlobalConfig, func, h: float):
         final_res.append(PointInTime(x_list=x_new, time=t_cur + h))
     
     return final_res
-
-# Незначительные
-
-def find_relative_error(comp_arr: list[PointInTime], h_et: float, globalConfig: GlobalConfig):
-    results_et = runge_kut(globalConfig, model4, h_et)
-    x1_et = results_et[-1].x_list[0]
-    x1_vals = [p.x_list[0] for p in comp_arr]
-    delta = abs((x1_et - x1_vals[-1]) / x1_et) * 100
-    print(f"Относительная погрешность (относительно эталона h={h_et}): {delta:.6f}%")
-    return delta
-
-def print_dct(head: str, dct: dict):
-    print(head)
-    for key in dct:
-        print(f"{key} = {dct[key]}")
