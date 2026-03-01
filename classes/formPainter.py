@@ -227,6 +227,7 @@ class FormPainter():
 
         self.plot_axes[0].set_title(f"Решение с шагом h = {h_user}", fontsize=11, fontweight="bold")
         self.plot_axes[count_plots - 1].set_xlabel("Время t, с", fontsize=10, fontweight="bold")
+        self.plot_axes[count_plots - 1].tick_params(axis="x", labelbottom=True)
         
         self.fig.canvas.draw()
 
